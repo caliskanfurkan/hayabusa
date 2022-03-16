@@ -1,4 +1,5 @@
 use crate::detections::{configs, detection::EvtxRecordInfo};
+use prettytable::{Cell, Row, Table};
 
 use super::statistics::EventStatistics;
 use std::collections::HashMap;
@@ -79,27 +80,12 @@ impl Timeline {
         sammsges.push(format!("Total Event Records: {}\n", self.stats.total));
         sammsges.push(format!("First Timestamp: {}", self.stats.start_time));
         sammsges.push(format!("Last Timestamp: {}\n", self.stats.end_time));
+        sammsges.push("---------------------------------------".to_string());
         for msgprint in sammsges.iter() {
             println!("{}", msgprint);
         }
-        let mut loginmsges: Vec<String> = Vec::new();
-        loginmsges
-            .push("-----------------------------------------------------------------".to_string());
-        loginmsges
-            .push("|                       Number  of  logins                      |".to_string());
-        loginmsges
-            .push("-----------------------------------------------------------------".to_string());
-        loginmsges
-            .push("|        User        |       Failed        |     Successful     |".to_string());
-        loginmsges
-            .push("-----------------------------------------------------------------".to_string());
-        let login_stats_msges: Vec<String> = self.tm_loginstats_set_msg();
-        for msgprint in loginmsges.iter() {
-            println!("{}", msgprint);
-        }
-        for msgprint in login_stats_msges.iter() {
-            println!("{}", msgprint);
-        }
+
+        self.tm_loginstats_tb_set_msg();
     }
 
     // イベントID毎の出力メッセージ生成
@@ -142,15 +128,23 @@ impl Timeline {
         return msges;
     }
     // ユーザ毎のログイン統計情報出力メッセージ生成
-    fn tm_loginstats_set_msg(&self) -> Vec<String> {
-        let mut msges: Vec<String> = Vec::new();
-        for (key, values) in &self.stats.stats_login_list {
-            msges.push(format!(
-                "{0}\t\t\t\t{1}\t\t\t\t{2}",
-                key, values[1], values[0]
-            ));
+    fn tm_loginstats_tb_set_msg(&self) {
+        let mut loginmsges: Vec<String> = Vec::new();
+        loginmsges.push(format!("Number  of  logins"));
+        for msgprint in loginmsges.iter() {
+            println!("{}", msgprint);
         }
-        msges.push("-----------------------------------------------------------------".to_string());
-        return msges;
+
+        let mut logins_stats_tb = Table::new();
+        logins_stats_tb.set_titles(row!["USER", "Failed", "Successful"]);
+
+        for (key, values) in &self.stats.stats_login_list {
+            logins_stats_tb.add_row(Row::new(vec![
+                Cell::new(key),
+                Cell::new(&values[1].to_string()),
+                Cell::new(&values[0].to_string()),
+            ]));
+        }
+        logins_stats_tb.printstd();
     }
 }
